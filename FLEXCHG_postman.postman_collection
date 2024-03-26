@@ -1,0 +1,70 @@
+{
+	"info": {
+		"_postman_id": "c0431386-71fc-425a-bf09-126a6f6d1854",
+		"name": "FLEXCHG",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30374844"
+	},
+	"item": [
+		{
+			"name": "Optimize multipoint",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\":[\r\n        {\r\n        \"id\":\"1\",\r\n        \"from\":\"A\",\r\n        \"to\":\"B\",\r\n        \"weight\": 1\r\n        },\r\n        {\r\n        \"id\":\"2\",\r\n        \"from\":\"A\",\r\n        \"to\":\"C\",\r\n        \"weight\": 1\r\n        },\r\n        {\r\n        \"id\":\"3\",\r\n        \"from\":\"B\",\r\n        \"to\":\"C\",\r\n        \"weight\": 1\r\n        },\r\n        {\r\n        \"id\":\"4\",\r\n        \"from\":\"C\",\r\n        \"to\":\"B\",\r\n        \"weight\": 1\r\n        },\r\n        {\r\n        \"id\":\"5\",\r\n        \"from\":\"C\",\r\n        \"to\":\"A\",\r\n        \"weight\": 1\r\n        }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:5000/optimize",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"optimize"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Optimize one-on-one",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\":[\r\n        {\r\n        \"id\":\"1\",\r\n        \"from\":\"A\",\r\n        \"to\":\"C\",\r\n        \"weight\": 1\r\n        },\r\n        {\r\n        \"id\":\"2\",\r\n        \"from\":\"C\",\r\n        \"to\":\"A\",\r\n        \"weight\": 1\r\n        }\r\n        ,\r\n        {\r\n        \"id\":\"3\",\r\n        \"from\":\"A\",\r\n        \"to\":\"D\",\r\n        \"weight\": 1\r\n        },\r\n        {\r\n        \"id\":\"4\",\r\n        \"from\":\"D\",\r\n        \"to\":\"A\",\r\n        \"weight\": 1\r\n        },\r\n        {\r\n        \"id\":\"5\",\r\n        \"from\":\"B\",\r\n        \"to\":\"C\",\r\n        \"weight\": 1\r\n        },\r\n        {\r\n        \"id\":\"6\",\r\n        \"from\":\"C\",\r\n        \"to\":\"B\",\r\n        \"weight\": 1\r\n        }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:5000/optimize",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"optimize"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
