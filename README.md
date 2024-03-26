@@ -35,3 +35,4 @@ with following JSON body:
     ]
 }
 ```
+or use postman collection added to the repository
