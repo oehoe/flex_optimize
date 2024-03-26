@@ -3,6 +3,7 @@ Download files
 ```
 pip install networkx
 pip install PuLP
+pip install Flask
 python server.py
 ```
 This will start a server on localhost:5000
