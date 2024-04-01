@@ -37,3 +37,5 @@ with following JSON body:
 }
 ```
 or use postman collection added to the repository
+
+added optimize.json. Example set of matches of dummy requests
