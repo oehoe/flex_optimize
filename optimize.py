@@ -1,111 +1,95 @@
-import networkx as nx
+# https://stackoverflow.com/questions/78292364/linear-programming-problem-with-variable-multi-way-duty-swap
+
+import networkx
 import pulp
 
 
-class Optimize:
-    def __init__(self, matches):
-        self.all_matches = matches
-        # self.matches = [('Alice', 'Charlie'), ('Charlie', 'Alice'), ('Alice', 'David'), ('David', 'Alice'), ('Bob',
-        # 'Charlie'), ('Charlie', 'Bob'), ('David', 'Charlie'), ('Charlie', 'David')] self.matches = [('Alice',
-        # 'Bob'), ('Bob', 'Alice'), ('Bob', 'Charlie'), ('Charlie', 'David'), ('Charlie', 'Alice'), ('Charlie',
-        # 'Bob'), ('David', 'Alice')]
-        self.requests = []
-        self.pairs = []
-        self.matches = []
-        for (r1, r2, match_id, weight) in matches:
-            self.matches.append((r1, r2))
-            if r1 not in self.requests:
-                self.requests.append(r1)
-            if r2 not in self.requests:
-                self.requests.append(r2)
-            if (r2, r1) in self.matches:
-                if (r1, r2) not in self.pairs and (r2, r1) not in self.pairs:
-                    self.pairs.append((r1, r2))
+def optimize(matches, max_steps=2):
+    # find sum of all weights to be used to prioritize max swaps
+    max_weight = sum(weight for (match_id, a, b, weight) in matches) + 1
 
-    def greedy(self):
-        G = nx.Graph()
-        G.add_nodes_from(self.requests, bipartite=0)
-        G.add_nodes_from(self.requests, bipartite=1)
-        for (r1, r2) in self.pairs:
-            G.add_edge(r1, r2)
-        matching_greedy = nx.maximal_matching(G)
-        print(self.pairs)
-        print(matching_greedy)
-        output = []
-        for (r1, r2) in matching_greedy:
-            for (q1, q2, match_id, weight) in self.all_matches:
-                if (r1 == q1 and r2 == q2) or (r1 == q2 and r2 == q1):
-                    output.append((q1, q2, match_id, weight))
-        return output
+    graph = networkx.DiGraph()
+    for (match_id, a, b, weight) in matches:
+        graph.add_edge(a, b)
 
-    def nx_optimize(self):
-        G = nx.Graph()
-        G.add_nodes_from(self.requests, bipartite=0)
-        G.add_nodes_from(self.requests, bipartite=1)
-        for (r1, r2) in self.pairs:
-            G.add_edge(r1, r2)
-        matching = nx.max_weight_matching(G)
-        print(self.pairs)
-        print(matching)
-        opt_matches = []
-        for (r1, r2) in matching:
-            for (q1, q2, match_id, weight) in self.all_matches:
-                if (r1 == q1 and r2 == q2) or (r1 == q2 and r2 == q1):
-                    opt_matches.append((q1, q2, match_id, weight))
-        return opt_matches
+    # default is one-on-one swaps (max_cycle_order = 2)
+    max_cycle_order = 2
+    if isinstance(max_steps, int):
+        max_cycle_order = abs(max_steps)
+    cycles = tuple(networkx.simple_cycles(graph, length_bound=max_cycle_order))
 
-    def optimize(self):
-        swaps = pulp.LpVariable.dicts('Swap', self.matches, cat='Binary')
-        # print(swaps)
-        model = pulp.LpProblem("DutySwap", pulp.LpMaximize)
-        model += pulp.lpSum(swaps[(p1, p2)] for (p1, p2) in self.matches)
-        # print(self.requests)
-        for p in self.requests:
-            model += pulp.lpSum(swaps[(p1, p2)] for (p1, p2) in self.matches if p1 == p) <= 1
-            model += pulp.lpSum(swaps[(p1, p2)] for (p1, p2) in self.matches if p2 == p) <= 1
-            model += (pulp.lpSum(swaps[(p1, p2)] for (p1, p2) in self.matches if p1 == p)
-                      == pulp.lpSum(swaps[(p1, p2)] for (p1, p2) in self.matches if p2 == p))
-        # print(model)
-        status = model.solve()
-        a = 0
-        opt_matches = []
-        for (p1, p2) in self.matches:
-            if pulp.value(swaps[(p1, p2)]) == 1:
-                a += 1
-                for (q1, q2, match_id, weight) in self.all_matches:
-                    if p1 == q1 and p2 == q2:
-                        opt_matches.append((q1, q2, match_id, weight))
+    cycle_names = ['_'.join(c) for c in cycles]
+
+    # Create weight for each cycle to be used by LP solver
+    cycle_orders = []
+    for c in cycles:
+        sum_weights = 0
+        for vertex in c:
+            for (match_id, v1, v2, weight) in matches:
+                if vertex == v2:
+                    sum_weights += weight
+                    break
+        cycle_orders.append(max_weight * len(c) + sum_weights)
+
+    selectors = pulp.LpVariable.matrix(
+        name='cycle', indices=cycle_names, cat=pulp.LpBinary,
+    )
+
+    prob = pulp.LpProblem(name='swaps', sense=pulp.LpMaximize)
+    prob.setObjective(pulp.lpDot(selectors, cycle_orders))
+
+    for vertex in graph.nodes:
+        # create list of all cycles where vertex (request) is used
+        group = [
+            selector
+            for selector, cycle in zip(selectors, cycles)
+            if vertex in cycle
+        ]
+        # maximize total of these cycles to 1 or smaller to not double use a request
+        prob.addConstraint(
+            name=f'excl_{vertex}',
+            constraint=pulp.lpSum(group) <= 1,
+        )
+
+    prob.solve()
+    assert prob.status == pulp.LpStatusOptimal
+
+    # process selected cycles for output
+    print('Selected cycles:')
+    swap_count = 0
+    result = []
+    for cycle, selector in zip(cycles, selectors):
+        if selector.value() > 0.5:
+            cycle_result = []
+            swap_count += len(cycle)
+            print(', '.join(cycle))
+            for c in range(0, len(cycle)):
+                d = c + 1
+                if d > len(cycle) - 1:
+                    d = 0
+                for (match_id, r1, r2, weight) in matches:
+                    if cycle[c] == r1 and cycle[d] == r2:
+                        cycle_result.append(match_id)
                         break
-                # print(f"{p1}'s duty goes to {p2}")
-        print("Total swaps: ", a)
-        return opt_matches
+            result.append(cycle_result)
 
-    def one_on_one(self):
-        swaps = pulp.LpVariable.dicts('Swap', self.matches, cat='Binary')
-        # print(swaps)
-        model = pulp.LpProblem("DutySwap", pulp.LpMaximize)
-        model += pulp.lpSum(swaps[(p1, p2)] for (p1, p2) in self.matches)
-        # print(self.requests)
-        for (p1, p2) in self.matches:
-            if (p2, p1) in self.matches:
-                model += pulp.lpSum(swaps[(p1, p2)]) == pulp.lpSum(swaps[(p2, p1)])
-            else:
-                model += swaps[(p1, p2)] == 0
+    output = {
+        "status": 1,
+        "result": result,
+        "swapCount": swap_count
+    }
+    return output
 
-        for p in self.requests:
-            model += pulp.lpSum(swaps[(p1, p2)] for (p1, p2) in self.matches if p1 == p) <= 1
-            model += pulp.lpSum(swaps[(p1, p2)] for (p1, p2) in self.matches if p2 == p) <= 1
-            model += (pulp.lpSum(swaps[(p1, p2)] for (p1, p2) in self.matches if p1 == p)
-                      == pulp.lpSum(swaps[(p1, p2)] for (p1, p2) in self.matches if p2 == p))
-        # print(model)
-        status = model.solve()
-        a = 0
-        opt_matches = []
-        for (p1, p2) in self.matches:
-            if pulp.value(swaps[(p1, p2)]) == 1:
-                a += 1
-                for (q1, q2, match_id, weight) in self.all_matches:
-                    if p1 == q1 and p2 == q2:
-                        opt_matches.append((q1, q2, match_id, weight))
-                        break
-        return opt_matches
+
+# test function call
+# optimize([
+#     ('id1', 'Amy', 'Blake', 2), ('id2', 'Blake', 'Claire', 5), ('id3', 'Claire', 'Drew', 5), ('id4', 'Drew', 'Emma', 7),
+#     ('id5', 'Emma', 'Flynn', 3), ('id6', 'Flynn', 'Gabi', 4), ('id7', 'Gabi', 'Hana', 5), ('id8', 'Hana', 'Izzy', 3),
+#     ('id16', 'Izzy', 'Jill', 6), ('id17', 'Jill', 'Amy', 3),
+#     # one on one
+#     ('id9', 'Blake', 'Amy', 3), ('id10', 'Claire', 'Blake', 2), ('id11', 'Emma', 'Drew', 5),
+#     # three point
+#     ('id12', 'Gabi', 'Emma', 7), ('id13', 'Drew', 'Blake', 7),
+#     # four point
+#     ('id14', 'Flynn', 'Claire', 1), ('id15', 'Jill', 'Gabi', 4)
+# ], 4)

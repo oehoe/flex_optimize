@@ -1,0 +1,42 @@
+{
+  "type": "object",
+  "properties": {
+    "pool": {
+      "type": "string"
+    },
+    "matchData": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "weight": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "from",
+          "to",
+          "weight"
+        ]
+      }
+    },
+    "maxSteps": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "pool",
+    "matchData",
+    "maxSteps"
+  ]
+}
