@@ -1,4 +1,4 @@
-FROM python:3.12.2-alpine3.19
+FROM python:slim
 RUN pip install Flask
 RUN pip install waitress
 RUN pip install PuLP

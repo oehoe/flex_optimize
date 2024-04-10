@@ -11,7 +11,7 @@ This will start a server on localhost:5001
 
 Use postman to make an optimization request in the following form
 POST to localhost:5001/optimize
-content-type: aplication/json
+content-type: application/json
 with following JSON body:
 ```yaml
 {
@@ -40,3 +40,15 @@ with following JSON body:
 }
 ```
 or use postman collection added to the repository
+
+
+Using docker
+```commandline
+docker build -t flex_optimize . 
+docker compose up
+```
+
+export docker image
+```commandline
+docker save --output flex_optimize.tar flex_optimize
+```

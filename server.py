@@ -47,8 +47,8 @@ def get_results():
     except ValidationError:
         log.error("Request body incorrect format")
         return '{"status": 0, "error":"Request body incorrect format"}'
-    except Exception:
-        log.error("Unknown error")
+    except Exception as error:
+        log.error("Unknown error", error)
         return '{"status": 0, "error":"Error in optimization"}'
 
 
