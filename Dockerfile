@@ -6,5 +6,7 @@ RUN pip install networkx
 RUN pip install waitress
 RUN pip install jsonschema
 EXPOSE 5001
-COPY *.py .
+COPY server.py .
+COPY optimize.py .
+copy request_schema.json .
 CMD ["python", "server.py"]

@@ -39,7 +39,6 @@ def get_results():
         # create tuples from inout
         for match in request.json['matchData']:
             matches.append((match['id'], match['from'], match['to'], match['weight']))
-
         # get optimized result
         output = optimize(matches, request.json['maxSteps'])
 

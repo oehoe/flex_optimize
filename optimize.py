@@ -2,9 +2,13 @@
 
 import networkx
 import pulp
+from datetime import datetime
 
 
 def optimize(matches, max_steps=2):
+
+    start_time = datetime.now()
+
     # find sum of all weights to be used to prioritize max swaps
     max_weight = sum(weight for (match_id, a, b, weight) in matches) + 1
 
@@ -15,7 +19,11 @@ def optimize(matches, max_steps=2):
     # default is one-on-one swaps (max_cycle_order = 2)
     max_cycle_order = 2
     if isinstance(max_steps, int):
-        max_cycle_order = abs(max_steps)
+        max_cycle_order = max_steps
+        if max_steps < 2:
+            max_cycle_order = 2
+        if max_steps > 6:
+            max_cycle_order = 6
     cycles = tuple(networkx.simple_cycles(graph, length_bound=max_cycle_order))
 
     cycle_names = ['_'.join(c) for c in cycles]
@@ -69,14 +77,20 @@ def optimize(matches, max_steps=2):
                     d = 0
                 for (match_id, r1, r2, weight) in matches:
                     if cycle[c] == r1 and cycle[d] == r2:
-                        cycle_result.append(match_id)
+                        cycle_result.append({'id': match_id, 'from': r1, 'to': r2})
                         break
             result.append(cycle_result)
+
+    end_time = datetime.now()
+    runtime = (end_time - start_time).total_seconds()
+    print('Duration: {}'.format(end_time - start_time))
 
     output = {
         "status": 1,
         "result": result,
-        "swapCount": swap_count
+        "swapCount": swap_count,
+        "maxSteps": max_cycle_order,
+        "runtime": runtime
     }
     return output
 
