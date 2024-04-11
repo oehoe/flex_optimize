@@ -1,10 +1,14 @@
-from flask import Flask, request
-from waitress import serve
-from optimize import optimize
-import json
-from jsonschema import validate, ValidationError
+"""Start server to create an endpoint to post optimization requests to."""
 import logging
 import sys
+import json
+
+from flask import Flask, request
+from waitress import serve
+from jsonschema import validate, ValidationError
+
+from optimize import optimize
+
 
 # SETUP LOGGING
 root = logging.getLogger()
@@ -27,6 +31,7 @@ api = Flask(__name__)
 
 @api.post('/optimize')
 def get_results():
+    """Return optimization results on posted swap request matches."""
     matches = []
     try:
         # check for valid data

@@ -1,7 +1,9 @@
+"""Perform optimization on set of swaprequest matches."""
 # https://stackoverflow.com/questions/78292364/linear-programming-problem-with-variable-multi-way-duty-swap
+import time
+
 import networkx
 import pulp
-import time
 
 
 def optimize(matches, max_steps=2):
