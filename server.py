@@ -1,10 +1,7 @@
-#import json
-import json
-
 from flask import Flask, request
-from optimize import optimize
-# from json import dumps
 from waitress import serve
+from optimize import optimize
+import json
 from jsonschema import validate, ValidationError
 import logging
 import sys
@@ -12,7 +9,6 @@ import sys
 # SETUP LOGGING
 root = logging.getLogger()
 root.setLevel(logging.DEBUG)
-
 handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -36,9 +32,10 @@ def get_results():
         # check for valid data
         validate(instance=request.json, schema=schema)
 
-        # create tuples from inout
+        # create tuples from input
         for match in request.json['matchData']:
             matches.append((match['id'], match['from'], match['to'], match['weight']))
+
         # get optimized result
         output = optimize(matches, request.json['maxSteps'])
 
@@ -46,10 +43,13 @@ def get_results():
         return json.dumps(output)
     except ValidationError:
         log.error("Request body incorrect format")
-        return '{"status": 0, "error":"Request body incorrect format"}'
+        return json.dumps({"success": False, "error": "Request body incorrect format"})
+    except AssertionError:
+        log.error("Optimal solution not found")
+        return json.dumps({"success": False, "error": "Optimal solution not found"})
     except Exception as error:
         log.error("Unknown error", error)
-        return '{"status": 0, "error":"Error in optimization"}'
+        return json.dumps({"success": False, "error": "Error in optimization"})
 
 
 if __name__ == '__main__':
