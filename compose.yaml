@@ -1,6 +1,7 @@
 services:
-  web:
-    build: .
+  optimizer:
+    build: https://github.com/oehoe/flex_optimize.git
+    image: flex_optimize
     ports:
       - "5001:5001"
     restart: unless-stopped

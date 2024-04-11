@@ -1,5 +1,5 @@
 # Install
-Download files
+Download files or clone repository
 ```
 pip install networkx
 pip install PuLP
@@ -9,9 +9,9 @@ python server.py
 ```
 This will start a server on localhost:5001
 
-Use postman to make an optimization request in the following form
-POST to localhost:5001/optimize
-content-type: application/json
+Use postman to make an optimization request in the following form  
+POST to localhost:5001/optimize  
+content-type: application/json  
 with following JSON body:
 ```yaml
 {
@@ -42,13 +42,15 @@ with following JSON body:
 or use postman collection added to the repository
 
 
-Using docker
+## Using docker
+Save compose.yaml and run following command in the same folder
 ```commandline
-docker build -t flex_optimize . 
 docker compose up
 ```
 
-export docker image
+Other docker commands
 ```commandline
+docker build --no-cache -t flex_optimize .
+docker build --no-cache -t flex_optimize_amd . --platform linux/amd64
 docker save --output flex_optimize.tar flex_optimize
 ```
