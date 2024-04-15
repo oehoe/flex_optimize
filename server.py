@@ -35,6 +35,7 @@ def get_results():
     matches = []
     try:
         # check for valid data
+        # TODO validate weights 0 - 100 ?
         validate(instance=request.json, schema=schema)
 
         # create tuples from input
@@ -43,7 +44,7 @@ def get_results():
 
         # get optimized result
         output = optimize(matches, request.json['maxSteps'])
-
+        output['pool'] = request.json['pool']
         log.info("Optimization completed")
         return json.dumps(output)
     except ValidationError:

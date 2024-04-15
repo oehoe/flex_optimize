@@ -51,10 +51,10 @@ def optimize(matches, max_steps=2):
 
     output = {
         "success": True,
-        "result": result,
         "swapCount": swap_count,
         "maxSteps": max_cycle_order,
-        "runtime": runtime
+        "runtime": runtime,
+        "result": result
     }
 
     return output
@@ -82,17 +82,17 @@ def find_all_cycles(matches, max_steps):
 def weights_for_cycles(matches, cycles):
     """Calculate weights for all cycles based on number of requests in cycles and weight of individual requests."""
     # find sum of all weights to be used to prioritize max swaps
-    max_weight = sum(weight for (match_id, a, b, weight) in matches) + 1
+    total_weight = sum(weight for (match_id, a, b, weight) in matches) + 1
 
     cycle_orders = []
     for c in cycles:
-        sum_weights = 0
+        cycle_weights = 0
         for vertex in c:
             for (match_id, v1, v2, weight) in matches:
                 if vertex == v2:
-                    sum_weights += weight
+                    cycle_weights += weight
                     break
-        cycle_orders.append(max_weight * len(c) + sum_weights)
+        cycle_orders.append((total_weight * len(c)) + cycle_weights)
     return cycle_orders
 
 
@@ -132,4 +132,11 @@ test_matches = [
     ('id14', 'Flynn', 'Claire', 1), ('id15', 'Jill', 'Gabi', 4)
 ]
 
+test_matches2 = [
+    ('id1', 'Anna', 'Bert', 2), ('id2', 'Bert', 'Coen', 5),
+    ('id3', 'Coen', 'Bert', 2), ('id4', 'Coen', 'Anna', 7),
+    ('id5', 'Bert', 'Daan', 8), ('id6', 'Daan', 'Coen', 5),
+    ('id3', 'Coen', 'Bert', 3)
+]
+# print(optimize(test_matches2, 2))
 # print(optimize(test_matches, 3))
