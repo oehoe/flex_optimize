@@ -92,7 +92,7 @@ def weights_for_cycles(matches, cycles):
                 if vertex == v2:
                     cycle_weights += weight
                     break
-        cycle_orders.append((total_weight * len(c)) + cycle_weights)
+        cycle_orders.append((total_weight * len(c)) + cycle_weights + (1 / len(c)))
     return cycle_orders
 
 
