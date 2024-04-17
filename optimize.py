@@ -6,7 +6,7 @@ import networkx
 import pulp
 
 
-def optimize(matches, max_steps=2):
+def optimize(pool, matches, max_steps=2):
     """Output set of cycles (array of matches) which gives the highest number of matches
      and the highest weight for that number of matches."""
     start = time.monotonic()
@@ -50,6 +50,7 @@ def optimize(matches, max_steps=2):
     print(f'Duration: {runtime} seconds')
 
     output = {
+        "pool": pool,
         "success": True,
         "swapCount": swap_count,
         "maxSteps": max_cycle_order,

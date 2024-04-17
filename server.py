@@ -43,20 +43,19 @@ def get_results():
             matches.append((match['id'], match['from'], match['to'], match['weight']))
 
         # get optimized result
-        output = optimize(matches, request.json['maxSteps'])
-        output['pool'] = request.json['pool']
-        log.info("Optimization completed")
+        output = optimize(request.json['pool'], matches, request.json['maxSteps'])
+        log.info('Optimization completed')
         return json.dumps(output)
     except ValidationError:
-        log.error("Request body incorrect format")
-        return json.dumps({"success": False, "error": "Request body incorrect format"})
+        log.error('Request body incorrect format')
+        return json.dumps({'success': False, 'error': 'Request body incorrect format'})
     except AssertionError:
-        log.error("Optimal solution not found")
-        return json.dumps({"success": False, "error": "Optimal solution not found"})
+        log.error('Optimal solution not found')
+        return json.dumps({'success': False, 'error': 'Optimal solution not found'})
     except Exception as error:
-        log.error("Unknown error", error)
-        return json.dumps({"success": False, "error": "Error in optimization"})
+        log.error('Unknown error', error)
+        return json.dumps({'success': False, 'error': 'Error in optimization'})
 
 
 if __name__ == '__main__':
-    serve(api, host="0.0.0.0", port=5001)
+    serve(api, host='0.0.0.0', port=5001)
