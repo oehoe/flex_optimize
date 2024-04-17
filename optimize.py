@@ -5,6 +5,9 @@ import time
 import networkx
 import pulp
 
+print('PuLP version:', pulp.__version__)
+last_run_values = {}
+
 
 def optimize(pool, matches, max_steps=2):
     """Output set of cycles (array of matches) which gives the highest number of matches
@@ -38,24 +41,29 @@ def optimize(pool, matches, max_steps=2):
             constraint=pulp.lpSum(group) <= 1,
         )
 
+    selectors = load_values_for_warm_start(pool, selectors)
+
     # prob.solve(pulp.PULP_CBC_CMD(timeLimit=1))
-    prob.solve()
+    prob.solve(pulp.PULP_CBC_CMD(msg=True, warmStart=True, keepFiles=True, threads=1))
+    # prob.solve()
 
     # Exception is raised when no optimal solution is found
     assert prob.status == pulp.LpStatusOptimal
 
     result, swap_count = create_result_array(matches, cycles, selectors)
 
+    save_for_warm_start(pool, selectors)
+
     runtime = round(time.monotonic() - start, 1)
     print(f'Duration: {runtime} seconds')
 
     output = {
-        "pool": pool,
-        "success": True,
-        "swapCount": swap_count,
-        "maxSteps": max_cycle_order,
-        "runtime": runtime,
-        "result": result
+        'pool': pool,
+        'success': True,
+        'swapCount': swap_count,
+        'maxSteps': max_cycle_order,
+        'runtime': runtime,
+        'result': result
     }
 
     return output
@@ -73,7 +81,7 @@ def find_all_cycles(matches, max_steps):
         max_cycle_order = max_steps
         if max_steps < 2:
             max_cycle_order = 2
-        elif max_steps > 7:
+        elif max_steps > 8:
             max_cycle_order = 7
     cycles = tuple(networkx.simple_cycles(graph, length_bound=max_cycle_order))
     swap_requests = graph.nodes
@@ -120,6 +128,25 @@ def create_result_array(matches, cycles, selectors):
     return result, swap_count
 
 
+def save_for_warm_start(pool, selectors):
+    """Save values of variables in last_run_values for possible next run."""
+    global last_run_values
+    # last_run_values[pool] = []
+    last_run_values[pool] = {}
+    for s in selectors:
+        # last_run_values[pool].append({s:s.value()})
+        last_run_values[pool][s.name] = s.value()
+
+
+def load_values_for_warm_start(pool, selectors):
+    """If values of previous solve are available. Load these as initial values."""
+    if pool in last_run_values.keys():
+        for i, v in enumerate(selectors):
+            if v.name in last_run_values[pool].keys():
+                selectors[i].setInitialValue(last_run_values[pool][v.name])
+    return selectors
+
+
 # test function call
 test_matches = [
     ('id1', 'Amy', 'Blake', 2), ('id2', 'Blake', 'Claire', 5), ('id3', 'Claire', 'Drew', 5), ('id4', 'Drew', 'Emma', 7),
@@ -140,4 +167,4 @@ test_matches2 = [
     ('id3', 'Coen', 'Bert', 3)
 ]
 # print(optimize(test_matches2, 2))
-# print(optimize(test_matches, 3))
+# print(optimize('testpool', test_matches, 3))
