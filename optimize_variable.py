@@ -2,16 +2,16 @@
 # https://stackoverflow.com/questions/78292364/linear-programming-problem-with-variable-multi-way-duty-swap
 import time
 
-import networkx
+import networkx as nx
 import pulp
 
 
-def optimize(pool, matches, max_steps=2):
+def optimize_variable(pool, matches, max_steps=2):
     """Output set of cycles (array of matches) which gives the highest number of matches
      and the highest weight for that number of matches."""
     start = time.monotonic()
 
-    cycles, swap_requests, max_cycle_order = find_all_cycles(matches, max_steps)
+    cycles, swap_requests = find_all_cycles(matches, max_steps)
     cycle_names = ['_'.join(c) for c in cycles]
 
     print(f'Duration simple cycles: {time.monotonic() - start}')
@@ -49,35 +49,26 @@ def optimize(pool, matches, max_steps=2):
     runtime = round(time.monotonic() - start, 1)
     print(f'Duration: {runtime} seconds')
 
-    output = {
-        "pool": pool,
-        "success": True,
-        "swapCount": swap_count,
-        "maxSteps": max_cycle_order,
-        "runtime": runtime,
-        "result": result
+    return {
+        'type': 'variable',
+        'pool': pool,
+        'success': True,
+        'swapCount': swap_count,
+        'maxSteps': max_steps,
+        'runtime': runtime,
+        'result': result
     }
-
-    return output
 
 
 def find_all_cycles(matches, max_steps):
     """Find all possible cycles within matches with length limited by max_steps."""
-    graph = networkx.DiGraph()
+    graph = nx.DiGraph()
     for (match_id, a, b, weight) in matches:
         graph.add_edge(a, b)
 
-    # default is one-on-one swaps (max_cycle_order = 2)
-    max_cycle_order = 2
-    if isinstance(max_steps, int):
-        max_cycle_order = max_steps
-        if max_steps < 2:
-            max_cycle_order = 2
-        elif max_steps > 7:
-            max_cycle_order = 7
-    cycles = tuple(networkx.simple_cycles(graph, length_bound=max_cycle_order))
+    cycles = tuple(nx.simple_cycles(graph, length_bound=max_steps))
     swap_requests = graph.nodes
-    return cycles, swap_requests, max_cycle_order
+    return cycles, swap_requests
 
 
 def weights_for_cycles(matches, cycles):
@@ -120,24 +111,27 @@ def create_result_array(matches, cycles, selectors):
     return result, swap_count
 
 
-# test function call
-test_matches = [
-    ('id1', 'Amy', 'Blake', 2), ('id2', 'Blake', 'Claire', 5), ('id3', 'Claire', 'Drew', 5), ('id4', 'Drew', 'Emma', 7),
-    ('id5', 'Emma', 'Flynn', 3), ('id6', 'Flynn', 'Gabi', 4), ('id7', 'Gabi', 'Hana', 5), ('id8', 'Hana', 'Izzy', 3),
-    ('id16', 'Izzy', 'Jill', 6), ('id17', 'Jill', 'Amy', 3),
-    # one on one
-    ('id9', 'Blake', 'Amy', 3), ('id10', 'Claire', 'Blake', 2), ('id11', 'Emma', 'Drew', 5),
-    # three point
-    ('id12', 'Gabi', 'Emma', 7), ('id13', 'Drew', 'Blake', 7),
-    # four point
-    ('id14', 'Flynn', 'Claire', 1), ('id15', 'Jill', 'Gabi', 4)
-]
+# test_matches = [
+#     ('id1', 'Amy', 'Blake', 2), ('id2', 'Blake', 'Claire', 5),
+#     ('id3', 'Claire', 'Drew', 5), ('id4', 'Drew', 'Emma', 7),
+#     ('id5', 'Emma', 'Flynn', 3), ('id6', 'Flynn', 'Gabi', 4),
+#     ('id7', 'Gabi', 'Hana', 5), ('id8', 'Hana', 'Izzy', 3),
+#     ('id16', 'Izzy', 'Jill', 6), ('id17', 'Jill', 'Amy', 3),
+#     # one on one
+#     ('id9', 'Blake', 'Amy', 3), ('id10', 'Claire', 'Blake', 2),
+#     ('id11', 'Emma', 'Drew', 5),
+#     # three point
+#     ('id12', 'Gabi', 'Emma', 7), ('id13', 'Drew', 'Blake', 7),
+#     # four point
+#     ('id14', 'Flynn', 'Claire', 1), ('id15', 'Jill', 'Gabi', 4)
+# ]
+#
+# test_matches2 = [
+#     ('id1', 'Anna', 'Bert', 2), ('id2', 'Bert', 'Coen', 5),
+#     ('id3', 'Coen', 'Bert', 2), ('id4', 'Coen', 'Anna', 7),
+#     ('id5', 'Bert', 'Daan', 8), ('id6', 'Daan', 'Coen', 5),
+#     ('id3', 'Coen', 'Bert', 3)
+# ]
 
-test_matches2 = [
-    ('id1', 'Anna', 'Bert', 2), ('id2', 'Bert', 'Coen', 5),
-    ('id3', 'Coen', 'Bert', 2), ('id4', 'Coen', 'Anna', 7),
-    ('id5', 'Bert', 'Daan', 8), ('id6', 'Daan', 'Coen', 5),
-    ('id3', 'Coen', 'Bert', 3)
-]
 # print(optimize(test_matches2, 2))
 # print(optimize(test_matches, 3))

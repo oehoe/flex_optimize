@@ -1,3 +1,13 @@
+# Summary
+Flex_optimize provides functionality to select the highest number of swap matches out of a set of possible matches.
+The project has three 'optimization' options.
+- bipartite: fast one-on-one (cycle length 2) matching
+- variable: Variable maximum cycle length by setting 'maxSteps' option
+- unlimited: optimization without maximum cycle length
+
+Bipartite uses networkx python library. Variable uses networkx and PuLP libraries. It uses https://github.com/coin-or/Cbc as solver.
+Unlimited uses PuLP library and also the cbc solver.
+
 # Install
 Download files or clone repository
 ```
@@ -15,8 +25,9 @@ content-type: application/json
 with following JSON body:
 ```yaml
 {
+    "optimizer":"variable",
     "pool":"test",
-    "maxSteps":2,
+    "maxSteps":3,
     "matchData":[
         {
         "id":"1",

@@ -1,6 +1,14 @@
 {
   "type": "object",
   "properties": {
+    "optimizer": {
+      "type": "string",
+      "oneOf": [
+        {"const": "bipartite"},
+        {"const": "variable"},
+        {"const": "unlimited"}
+      ]
+    },
     "pool": {
       "type": "string",
       "minLength": 1
@@ -37,12 +45,15 @@
       }
     },
     "maxSteps": {
-      "type": "number"
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 5
+
     }
   },
   "required": [
+    "optimizer",
     "pool",
-    "matchData",
-    "maxSteps"
+    "matchData"
   ]
 }

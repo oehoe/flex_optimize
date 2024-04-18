@@ -7,6 +7,8 @@ RUN pip install waitress
 RUN pip install jsonschema
 EXPOSE 5001
 COPY server.py .
-COPY optimize.py .
-copy request_schema.json .
+COPY optimize_bipartite.py ./
+COPY optimize_variable.py ./
+COPY optimize_unlimited.py ./
+copy request_schema.json ./
 CMD ["python", "server.py"]

@@ -7,7 +7,9 @@ from flask import Flask, request
 from waitress import serve
 from jsonschema import validate, ValidationError
 
-from optimize import optimize
+from optimize_bipartite import max_weight_matching
+from optimize_variable import optimize_variable
+from optimize_unlimited import optimize_unlimited
 
 
 # SETUP LOGGING
@@ -35,20 +37,30 @@ def get_results():
     matches = []
     try:
         # check for valid data
-        # TODO validate weights 0 - 100 ?
         validate(instance=request.json, schema=schema)
 
         # create tuples from input
         for match in request.json['matchData']:
             matches.append((match['id'], match['from'], match['to'], match['weight']))
 
+        pool = request.json['pool']
+        optimizer = request.json['optimizer']
+
         # get optimized result
-        output = optimize(request.json['pool'], matches, request.json['maxSteps'])
+        if optimizer == 'bipartite':
+            output = max_weight_matching(pool, matches)
+        elif optimizer == 'variable' and 'maxSteps' in request.json.keys():
+            output = optimize_variable(pool, matches, request.json['maxSteps'])
+        elif optimizer == 'variable':
+            raise ValidationError('\'maxSteps\' is a required property with optimizer \'variable\'')
+        elif optimizer == 'unlimited':
+            output = optimize_unlimited(pool, matches)
+
         log.info('Optimization completed')
         return json.dumps(output)
-    except ValidationError:
-        log.error('Request body incorrect format')
-        return json.dumps({'success': False, 'error': 'Request body incorrect format'})
+    except ValidationError as error:
+        log.error('Request body incorrect format: ' + error.args[0])
+        return json.dumps({'success': False, 'error': 'Request body incorrect format: ' + error.args[0]})
     except AssertionError:
         log.error('Optimal solution not found')
         return json.dumps({'success': False, 'error': 'Optimal solution not found'})
