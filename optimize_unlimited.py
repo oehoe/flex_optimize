@@ -36,7 +36,7 @@ def optimize_unlimited(pool, matches):
             print(f"{p1}'s duty goes to {p2}")
     print("Total swaps: ", swap_count)
 
-    result, max_steps = create_result_array(chosen_matches)
+    result, max_steps = create_result_array(chosen_matches, pool)
 
     runtime = round(time.monotonic() - start, 1)
     print(f'Duration: {runtime} seconds')
@@ -68,7 +68,7 @@ def requests_and_matches(matches):
     return requests, lim_matches, total_weight
 
 
-def create_result_array(chosen_matches):
+def create_result_array(chosen_matches, pool):
     """Create output array from selected matches"""
     result = []
     this_cycle = []
@@ -82,7 +82,7 @@ def create_result_array(chosen_matches):
             if this_cycle[0]['from'] == p2 and this_cycle[-1]['to'] == p1:
                 this_cycle.append({'id': match_id, 'from': p1, 'to': p2})
                 chosen_matches.pop(index)
-                result.append(this_cycle)
+                result.append({'pool': pool, 'cycle': this_cycle})
                 if len(this_cycle) > max_steps:
                     max_steps = len(this_cycle)
                 this_cycle = []

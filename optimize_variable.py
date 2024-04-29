@@ -44,7 +44,7 @@ def optimize_variable(pool, matches, max_steps=2):
     # Exception is raised when no optimal solution is found
     assert prob.status == pulp.LpStatusOptimal
 
-    result, swap_count = create_result_array(matches, cycles, selectors)
+    result, swap_count = create_result_array(matches, cycles, selectors, pool)
 
     runtime = round(time.monotonic() - start, 1)
     print(f'Duration: {runtime} seconds')
@@ -88,7 +88,7 @@ def weights_for_cycles(matches, cycles):
     return cycle_orders
 
 
-def create_result_array(matches, cycles, selectors):
+def create_result_array(matches, cycles, selectors, pool):
     """Find selected cycles and add array of matches in these cycles to the result array."""
     print('Selected cycles:')
     swap_count = 0
@@ -107,7 +107,7 @@ def create_result_array(matches, cycles, selectors):
                     if cycle[c] == r1 and cycle[d] == r2:
                         cycle_result.append({'id': match_id, 'from': r1, 'to': r2})
                         break
-            result.append(cycle_result)
+            result.append({'pool': pool, 'cycle': cycle_result})
     return result, swap_count
 
 

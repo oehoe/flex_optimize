@@ -19,7 +19,7 @@ def greedy(pool, matches):
 
     maximal_matching = nx.maximal_matching(graph)
 
-    result, swap_count = create_result_array(matches, maximal_matching)
+    result, swap_count = create_result_array(matches, maximal_matching, pool)
 
     runtime = round(time.monotonic() - start, 1)
     print(f'Duration: {runtime} seconds')
@@ -59,7 +59,7 @@ def max_weight_matching(pool, matches):
 
     max_weight = nx.max_weight_matching(graph)
 
-    result, swap_count = create_result_array(matches, max_weight)
+    result, swap_count = create_result_array(matches, max_weight, pool)
 
     runtime = round(time.monotonic() - start, 1)
     print(f'Duration: {runtime} seconds')
@@ -91,7 +91,7 @@ def requests_and_pairs(matches):
     return requests, pairs
 
 
-def create_result_array(matches, matching):
+def create_result_array(matches, matching, pool):
     result = []
     swap_count = len(matching) * 2
     for (r1, r2) in matching:
@@ -101,7 +101,7 @@ def create_result_array(matches, matching):
                 cycle_result.append({'id': match_id, 'from': a, 'to': b})
             if len(cycle_result) == 2:
                 break
-        result.append(cycle_result)
+        result.append({'pool': pool, 'cycle': cycle_result})
     return result, swap_count
 
 
